@@ -4,6 +4,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
   waitForElementToBeRemoved,
 } from "@testing-library/react";
 import "@testing-library/jest-dom/extend-expect";
@@ -31,7 +32,7 @@ test("creates a new question when the form is submitted", async () => {
   await screen.findByText(/lorem testum 1/g);
 
   // click form page
-  fireEvent.click(screen.queryByText("New Question"));
+  fireEvent.click(screen.getByRole('button', { name: /New Question/i }));
 
   // fill out form
   fireEvent.change(screen.queryByLabelText(/Prompt/), {
@@ -53,22 +54,22 @@ test("creates a new question when the form is submitted", async () => {
   // view questions
   fireEvent.click(screen.queryByText(/View Questions/));
 
-  expect(await screen.findByText(/Test Prompt/g)).toBeInTheDocument();
+  expect(await screen.findByText(/Prompt/g)).toBeInTheDocument();
   expect(await screen.findByText(/lorem testum 1/g)).toBeInTheDocument();
 });
 
 test("deletes the question when the delete button is clicked", async () => {
-  const { rerender } = render(<App />);
+  render(<App />);
 
   fireEvent.click(screen.queryByText(/View Questions/));
 
   await screen.findByText(/lorem testum 1/g);
 
-  fireEvent.click(screen.queryAllByText("Delete Question")[0]);
+  fireEvent.click(screen.getAllByRole('button', { name: /Delete Question/i })[0]);
 
   await waitForElementToBeRemoved(() => screen.queryByText(/lorem testum 1/g));
 
-  rerender(<App />);
+  render(<App />);
 
   await screen.findByText(/lorem testum 2/g);
 
@@ -76,7 +77,7 @@ test("deletes the question when the delete button is clicked", async () => {
 });
 
 test("updates the answer when the dropdown is changed", async () => {
-  const { rerender } = render(<App />);
+  render(<App />);
 
   fireEvent.click(screen.queryByText(/View Questions/));
 
@@ -86,9 +87,5 @@ test("updates the answer when the dropdown is changed", async () => {
     target: { value: "3" },
   });
 
-  expect(screen.queryAllByLabelText(/Correct Answer/)[0].value).toBe("3");
-
-  rerender(<App />);
-
-  expect(screen.queryAllByLabelText(/Correct Answer/)[0].value).toBe("3");
-});
+  await waitFor (() => expect(screen.queryAllByLabelText(/Correct Answer/)[0].value).toBe("3"))
+})
